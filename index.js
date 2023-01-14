@@ -22,6 +22,7 @@ const run = async () => {
 
         const admissionCollection = client.db('studentManagement').collection('admission');
         const studentGoal = client.db('studentManagement').collection('studentGoal');
+        const dailyClassWork = client.db('studentManagement').collection('dailyClassWork');
 
         /* Post Student Goals */
         app.post('/studentGoal', async (req, res) => {
@@ -45,6 +46,27 @@ const run = async () => {
                 image
             });
             res.send({ result });
+        })
+
+        /*Post Daily Class Work*/
+        app.post('/dailyClassWork', async (req, res) => {
+            const file = req.files.file;
+            const className = req.body.className;
+            const chapter = req.body.chapter;
+            const subject = req.body.subject;
+            const topic = req.body.topic;
+            const description = req.body.description;
+            const date = req.body.date;
+            const newImg = file.data;
+            const encImg = newImg.toString('base64');
+            const image = {
+                contentType: req.files.file.mimetype,
+                size: req.files.file.size,
+                img: Buffer.from(encImg, 'base64')
+            };
+            const result = await dailyClassWork.insertOne({ file, className, chapter, subject, topic, description, image, date });
+            res.send({ result });
+
         })
 
         /* GET students Goals */
