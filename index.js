@@ -23,6 +23,9 @@ const run = async () => {
         const admissionCollection = client.db('studentManagement').collection('admission');
         const studentGoal = client.db('studentManagement').collection('studentGoal');
         const dailyClassWork = client.db('studentManagement').collection('dailyClassWork');
+        const homeWork = client.db('studentManagement').collection('homeWork');
+        const completeLesson = client.db('studentManagement').collection('completeLesson');
+        const adminModeratorCollection = client.db('studentManagement').collection('adminModerator');
 
         /* Post Student Goals */
         app.post('/studentGoal', async (req, res) => {
@@ -64,8 +67,67 @@ const run = async () => {
                 size: req.files.file.size,
                 img: Buffer.from(encImg, 'base64')
             };
-            const result = await dailyClassWork.insertOne({ file, className, chapter, subject, topic, description, image, date });
+            const result = await dailyClassWork.insertOne({ className, chapter, subject, topic, description, image, date });
             res.send({ result });
+
+        })
+
+        /* POST assign home work*/
+        app.post('/assignHomeWork', async (req, res) => {
+            const className = req.body.className;
+            const subject = req.body.subject;
+            const topic = req.body.topic;
+            const chapter = req.body.chapter;
+            const submissionDate = req.body.submissionDate;
+            const teacherName = req.body.teacherName;
+            const description = req.body.description;
+
+            const homeWorkData = await homeWork.insertOne({
+                subject, topic, chapter, submissionDate, teacherName, description
+            });
+
+            res.send({ homeWorkData });
+        })
+
+        /* POST Update Complete lesson */
+        app.post('/updateCompleteLesson', async (req, res) => {
+            const className = req.body.className;
+            const subject = req.body.subject;
+            const teacherName = req.body.teacherName;
+            const totalLesson = req.body.totalLesson;
+            const lessonCompleted = req.body.lessonCompleted;
+            const lessonCompleteDate = req.body.lessonCompleteDate;
+            const description = req.body.description;
+
+            const result = await completeLesson.insertOne({
+                className,
+                subject,
+                teacherName,
+                totalLesson,
+                lessonCompleted,
+                lessonCompleteDate,
+                description
+            });
+
+            res.send({ result });
+
+        })
+
+        /*POST admin moderator  */
+        app.post('/adminOrModerator', async (req, res) => {
+            const status = req.body.user;
+            const email = req.body.email;
+            const existing = await adminModeratorCollection.findOne({ email });
+
+            if (!existing) {
+                const result = await adminModeratorCollection.insertOne({
+                    status, email
+                });
+                res.send({ result });
+            } else {
+                const result = existing;
+                res.send(result);
+            }
 
         })
 
