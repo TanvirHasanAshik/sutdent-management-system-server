@@ -3,7 +3,7 @@ const cors = require('cors');
 const app = express();
 const port = process.env.PORT || 5000;
 require('dotenv').config()
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const fileUpload = require('express-fileupload');
 const fs = require('fs-extra');
 const bodyParser = require('body-parser');
@@ -129,6 +129,44 @@ const run = async () => {
                 res.send(result);
             }
 
+        })
+
+        /* GET admin moderators  */
+        app.get('/adminAndModerators', async (req, res) => {
+            const query = {};
+            const adminData = adminModeratorCollection.find(query);
+            const result = await adminData.toArray();
+
+            res.send({ result });
+        })
+
+        /*UPDATE admin moderators */
+        app.put('/updateAdminModerator/:id', async (req, res) => {
+            const id = req.params.id;
+            const user = req.body;
+            const filter = { _id: ObjectId(id) };
+            const options = { upsert: true };
+
+            const updateData = {
+                $set: {
+                    email: user.email,
+                    status: user.status
+                }
+            }
+
+            const result = await adminModeratorCollection.updateOne(filter, updateData, options);
+
+            res.send({ result });
+
+        })
+
+        /* DELETE admin moderators */
+        app.delete('/deleteAdminOrModerator/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) }
+            const result = await adminModeratorCollection.deleteOne(query);
+
+            res.send({ result });
         })
 
         /* GET students Goals */
