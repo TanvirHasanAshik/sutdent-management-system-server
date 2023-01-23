@@ -26,7 +26,9 @@ const run = async () => {
         const homeWork = client.db('studentManagement').collection('homeWork');
         const completeLesson = client.db('studentManagement').collection('completeLesson');
         const adminModeratorCollection = client.db('studentManagement').collection('adminModerator');
+        const studentCollection = client.db('studentManagement').collection('student-collection');
 
+        /*---------------------- POST Operation here ---------------------------*/
         /* Post Student Goals */
         app.post('/studentGoal', async (req, res) => {
 
@@ -34,6 +36,7 @@ const run = async () => {
             const goalName = req.body.goalName;
             const description = req.body.description;
             const goalType = req.body.goalType;
+
             const newImg = file.data;
             const encImg = newImg.toString('base64');
             const image = {
@@ -131,6 +134,74 @@ const run = async () => {
 
         })
 
+        /* POST Student Information */
+        app.post('/addStudent', async (req, res) => {
+            const studentInfo = JSON.parse(req.body.studentInfo);
+
+            const file = req.files.file;
+            const studentName = studentInfo.studentName;
+            const fathersName = studentInfo.fathersName;
+            const mothersName = studentInfo.mothersName;
+            const email = studentInfo.email;
+            const dateOfBirth = studentInfo.dateOfBirth;
+            const studentId = studentInfo.studentId;
+            const studentAddress = studentInfo.studentAddress;
+            const className = studentInfo.className;
+
+            const newImg = file.data;
+            const encImg = newImg.toString('base64');
+            const image = {
+                contentType: file.mimetype,
+                size: file.size,
+                img: Buffer.from(encImg, 'base64')
+            };
+
+            const result = await studentCollection.insertOne({
+                studentName,
+                fathersName,
+                mothersName,
+                email,
+                dateOfBirth,
+                studentId,
+                studentAddress,
+                className,
+                image
+            });
+
+            res.send({ result });
+
+        })
+        /* -------------------------POST close---------------------- */
+
+
+        /* -------------------------GET Operation here ------------------------- */
+        /* GET all students */
+        app.get('/allStudent', async (req, res) => {
+            const id = req.query.id?.toLowerCase();
+            const className = req.query.className;
+
+            if (id) {
+                const query = { studentId: id };
+                const allStudent = studentCollection.find(query);
+                const result = await allStudent.toArray();
+                res.send({ result });
+            } else if (className) {
+                const query = { className: className };
+                const allStudent = studentCollection.find(query);
+                const result = await allStudent.toArray();
+                res.send({ result });
+            }
+            else {
+                const query = {};
+                const allStudent = studentCollection.find(query);
+                const result = await allStudent.toArray();
+                res.send({ result });
+            }
+
+
+
+        })
+
         /* GET admin moderators  */
         app.get('/adminAndModerators', async (req, res) => {
             const query = {};
@@ -140,6 +211,18 @@ const run = async () => {
             res.send({ result });
         })
 
+        /* GET students Goals */
+        app.get('/students-goals', async (req, res) => {
+            const query = {};
+            const goalsData = studentGoal.find(query);
+            const result = await goalsData.toArray();
+
+            res.send({ result })
+        })
+        /* -------------------------GET Close---------------------------- */
+
+
+        /* -----------------------UPDATE Operation here------------------- */
         /*UPDATE admin moderators */
         app.put('/updateAdminModerator/:id', async (req, res) => {
             const id = req.params.id;
@@ -160,6 +243,10 @@ const run = async () => {
 
         })
 
+        /* -----------------------UPDATE close---------------------------- */
+
+
+        /* ------------------------DELETE Operation here-------------------- */
         /* DELETE admin moderators */
         app.delete('/deleteAdminOrModerator/:id', async (req, res) => {
             const id = req.params.id;
@@ -167,16 +254,18 @@ const run = async () => {
             const result = await adminModeratorCollection.deleteOne(query);
 
             res.send({ result });
-        })
+        });
 
-        /* GET students Goals */
-        app.get('/students-goals', async (req, res) => {
-            const query = {};
-            const goalsData = studentGoal.find(query);
-            const result = await goalsData.toArray();
+        /* DELETE Student */
+        app.delete('/deleteStudent/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await studentCollection.deleteOne(query);
 
             res.send({ result })
         })
+        /* DELETE close */
+
 
     } finally {
         // client.close()
